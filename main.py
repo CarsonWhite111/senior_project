@@ -28,36 +28,36 @@ class Server(BaseHTTPRequestHandler):
         # Home page
         if self.path == "/":
             # Page that lists encode and decode links
-            self.wfile.write(bytes("<html><head><title>Image encrypter & decrypter web serverr</title></head>", "utf-8"))
-            self.wfile.write(bytes("<body>", "utf-8"))
-            self.wfile.write(bytes("<h1>Encode & Decode Images Here</h1>", "utf-8"))
-            self.wfile.write(bytes("<p><a href='/encode'>encode</a></p>", "utf-8"))
-            self.wfile.write(bytes("<p><a href='/decode'>decode</a></p>", "utf-8"))
-            self.wfile.write(bytes("</body></html>", "utf-8"))
+            self.wfile.write(b"<html><head><title>Image encrypter & decrypter web serverr</title></head>")
+            self.wfile.write(b"<body>")
+            self.wfile.write(b"<h1>Encode & Decode Images Here</h1>")
+            self.wfile.write(b"<p><a href='/encode'>encode</a></p>")
+            self.wfile.write(b"<p><a href='/decode'>decode</a></p>")
+            self.wfile.write(b"</body></html>")
         # Encode page
         elif self.path == "/encode":
             # Lists a file input and upload button
-            self.wfile.write(bytes("<html><head><title>Encode</title></head>", "utf-8"))
-            self.wfile.write(bytes("<body><h1>Encode Page</h1>", "utf-8"))
+            self.wfile.write(b"<html><head><title>Encode</title></head>")
+            self.wfile.write(b"<body><h1>Encode Page</h1>")
             self.wfile.write(b"<form method='POST' enctype='multipart/form-data'>")
             self.wfile.write(b"<input type='file' name='img_file'><br><p>Image</p>")
             self.wfile.write(b"<input type='submit' value='Upload'>")
             self.wfile.write(b"</form>")
-            self.wfile.write(bytes("</body></html>", "utf-8"))
+            self.wfile.write(b"</body></html>")
         elif self.path == "/decode":
             # Lists two file inputs for image and key and upload button
-            self.wfile.write(bytes("<html><head><title>Decode</title></head>", "utf-8"))
-            self.wfile.write(bytes("<body><h1>Decode Page</h1>", "utf-8"))
+            self.wfile.write(b"<html><head><title>Decode</title></head>")
+            self.wfile.write(b"<body><h1>Decode Page</h1>")
             self.wfile.write(b"<form method='POST' enctype='multipart/form-data'>")
             self.wfile.write(b"<input type='file' name='img_file'><p>Image</p><br>")
             self.wfile.write(b"<input type='file' name='key_file'><p>Key</p><br>")
             self.wfile.write(b"<input type='submit' value='Upload'>")
             self.wfile.write(b"</form>")
-            self.wfile.write(bytes("</body></html>", "utf-8"))
+            self.wfile.write(b"</body></html>")
         else:
             # If navigated to incorrect location
-            self.wfile.write(bytes("<html><head><title>Not Found</title></head>", "utf-8"))
-            self.wfile.write(bytes("<body><p>404 - Page not found.</p></body></html>", "utf-8"))
+            self.wfile.write(b"<html><head><title>Not Found</title></head>")
+            self.wfile.write(b"<body><p>404 - Page not found.</p></body></html>")
 
     # Handle client actions
     def do_POST(self):
@@ -88,14 +88,13 @@ class Server(BaseHTTPRequestHandler):
                     self.send_response(400)
                     self.send_header('Content-type', 'text/html')
                     self.end_headers()
-                    self.wfile.write(bytes("You inputted either a non png file or a png file with incorrect format",
-                                           "utf8"))
+                    self.wfile.write(b"You inputted either a non png file or a png file with incorrect format")
                 # If client submits an incorrect key size for image
                 elif key_e is not None:
                     self.send_response(400)
                     self.send_header('Content-type', 'text/html')
                     self.end_headers()
-                    self.wfile.write(bytes("The given key does not match the dimensions of the given image", 'utf8'))
+                    self.wfile.write(b"The given key does not match the dimensions of the given image")
                 # Fine path
                 else:
                     # Write and download decrypted image
@@ -138,8 +137,7 @@ class Server(BaseHTTPRequestHandler):
                     self.send_response(400)
                     self.send_header('Content-type', 'text/html')
                     self.end_headers()
-                    self.wfile.write(bytes("You inputted either a non png file or a png file with incorrect format",
-                                           "utf8"))
+                    self.wfile.write(b"You inputted either a non png file or a png file with incorrect format")
                 # Zip and download files
                 else:
                     file_names = [img_file.filename, "key.txt"]
@@ -261,6 +259,33 @@ def decrypt_image(path, key_path):
     return png_exception, key_exception
 
 
+# Test block
+# Change string to __main__ to test
+if __name__ == "":
+    error = encode_image('test_files/false_png_test.png', 'test_key.txt')
+    if error is not None:
+        print('passed false png')
+    error = encode_image('test_files/not_png_test.txt', 'test_key.txt')
+    if error is not None:
+        print('passed not png')
+    error = encode_image('test_files/true_png_test.png', 'test_key.txt')
+    if error is None:
+        print('passed true png')
+    png_error, key_error = decrypt_image('test_files/true_png_test.png', 'test_key.txt')
+    if (png_error is None) & (key_error is None):
+        print('passed decode true png')
+    png_error, key_error = decrypt_image('test_files/true_png_test.png', 'test_files/false_key_test.txt')
+    if key_error is not None:
+        print('passed false key test')
+    png_error, key_error = decrypt_image('test_files/false_png_test.png', 'test_files/false_key_test.txt')
+    if png_error is not None:
+        print('passed false png decrypt')
+    png_error, key_error = decrypt_image('test_files/not_png_test.txt', 'test_files/false_key_test.txt')
+    if png_error is not None:
+        print('passed not png decrypt')
+    os.remove('test_key.txt')
+
+# Main
 if __name__ == "__main__":
     # Setup webserver
     hostName = "localhost"
@@ -274,3 +299,4 @@ if __name__ == "__main__":
         pass
     webServer.server_close()
     print("Server stopped.")
+
